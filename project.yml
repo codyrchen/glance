@@ -1,0 +1,141 @@
+name: ContextAssistantSuite
+options:
+  bundleIdPrefix: dev.codychen
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CURRENT_PROJECT_VERSION: 1
+    MARKETING_VERSION: "1.0"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+    CLANG_ENABLE_OBJC_WEAK: YES
+  configs:
+    Debug:
+      ENABLE_TESTABILITY: YES
+      SWIFT_OPTIMIZATION_LEVEL: -Onone
+    Release:
+      ENABLE_TESTABILITY: NO
+      SWIFT_COMPILATION_MODE: wholemodule
+packages:
+  ContextAssistantCore:
+    path: Packages/Core
+targets:
+  ContextAssistant:
+    type: application
+    platform: macOS
+    sources:
+      - path: ContextAssistant
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+      - path: Shared/MacCapture
+    dependencies:
+      - package: ContextAssistantCore
+        product: ContextAssistantCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.ContextAssistant
+        PRODUCT_NAME: ContextAssistant
+        PRODUCT_MODULE_NAME: ContextAssistant
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: ContextAssistant/Info.plist
+        CODE_SIGN_ENTITLEMENTS: ContextAssistant/ContextAssistant.entitlements
+  CaptureLab:
+    type: application
+    platform: macOS
+    sources:
+      - path: CaptureLab
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CaptureLab
+        PRODUCT_NAME: CaptureLab
+        PRODUCT_MODULE_NAME: CaptureLab
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: CaptureLab/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CaptureLab/CaptureLab.entitlements
+  CaptureDiagnostics:
+    type: application
+    platform: macOS
+    sources:
+      - path: CaptureDiagnostics
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+      - path: Shared/MacCapture
+    dependencies:
+      - package: ContextAssistantCore
+        product: ContextAssistantCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CaptureDiagnostics
+        PRODUCT_NAME: CaptureDiagnostics
+        PRODUCT_MODULE_NAME: CaptureDiagnostics
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: CaptureDiagnostics/Info.plist
+        CODE_SIGN_ENTITLEMENTS: CaptureDiagnostics/CaptureDiagnostics.entitlements
+  CoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Packages/Core/Tests/ContextAssistantCoreTests
+    dependencies:
+      - package: ContextAssistantCore
+        product: ContextAssistantCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CoreTests
+        PRODUCT_NAME: CoreTests
+  CaptureIntegrationTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: IntegrationTests
+    dependencies:
+      - target: ContextAssistant
+      - package: ContextAssistantCore
+        product: ContextAssistantCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CaptureIntegrationTests
+        PRODUCT_NAME: CaptureIntegrationTests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ContextAssistant.app/Contents/MacOS/ContextAssistant
+        BUNDLE_LOADER: $(TEST_HOST)
+schemes:
+  ContextAssistant:
+    build:
+      targets:
+        ContextAssistant: all
+        CaptureIntegrationTests: [test]
+        CoreTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CoreTests
+        - CaptureIntegrationTests
+  CaptureLab:
+    build:
+      targets:
+        CaptureLab: all
+    run:
+      config: Debug
+  CaptureDiagnostics:
+    build:
+      targets:
+        CaptureDiagnostics: all
+    run:
+      config: Debug
