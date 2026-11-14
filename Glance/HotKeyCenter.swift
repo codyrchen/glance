@@ -56,7 +56,7 @@ final class HotKeyCenter {
     private var handler: EventHandlerRef?
     private let signature: OSType = {
         var result: OSType = 0
-        for byte in [UInt8]("CXAS".utf8) {
+        for byte in [UInt8]("GLNC".utf8) {
             result = (result << 8) + OSType(byte)
         }
         return result

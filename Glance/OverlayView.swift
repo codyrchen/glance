@@ -1,4 +1,4 @@
-import ContextAssistantCore
+import GlanceCore
 import SwiftUI
 
 struct OverlayView: View {

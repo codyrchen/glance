@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Context Assistant</string>
+	<string>Glance</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -29,6 +29,6 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSScreenCaptureUsageDescription</key>
-	<string>Context Assistant captures a window you select so it can read on-screen text and answer a question about it. It does not capture any other window.</string>
+	<string>Glance captures a window you select so it can read on-screen text and answer a question about it. It does not capture any other window.</string>
 </dict>
 </plist>

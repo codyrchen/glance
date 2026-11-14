@@ -1,5 +1,5 @@
 import AppKit
-import ContextAssistantCore
+import GlanceCore
 import SwiftUI
 
 enum OverlayPreset: String, CaseIterable, Identifiable, Codable {

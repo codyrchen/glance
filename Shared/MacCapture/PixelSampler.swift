@@ -1,4 +1,4 @@
-import ContextAssistantCore
+import GlanceCore
 import CoreGraphics
 import Foundation
 

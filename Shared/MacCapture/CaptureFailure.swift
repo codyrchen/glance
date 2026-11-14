@@ -19,7 +19,7 @@ enum CaptureFailure: Error, Equatable, CustomStringConvertible {
     var description: String {
         switch self {
         case .permissionRequired:
-            return "Screen Recording permission is not granted. Enable Context Assistant in System Settings and try again."
+            return "Screen Recording permission is not granted. Enable Glance in System Settings and try again."
         case .windowUnavailable:
             return "That window is no longer available to capture. Choose it again."
         case .blankFrame(let reason):

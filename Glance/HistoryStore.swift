@@ -1,4 +1,4 @@
-import ContextAssistantCore
+import GlanceCore
 import Foundation
 
 @MainActor
@@ -10,7 +10,7 @@ final class HistoryStore {
     init(fileManager: FileManager = .default) {
         let base = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? fileManager.temporaryDirectory
-        let directory = base.appendingPathComponent("ContextAssistant", isDirectory: true)
+        let directory = base.appendingPathComponent("Glance", isDirectory: true)
         self.fileURL = directory.appendingPathComponent("history.json")
     }
 

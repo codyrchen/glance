@@ -2,11 +2,11 @@ import AppKit
 import SwiftUI
 
 @main
-struct ContextAssistantApp: App {
+struct GlanceApp: App {
     @StateObject private var model = AppModel()
 
     var body: some Scene {
-        Window("Context Assistant", id: "controls") {
+        Window("Glance", id: "controls") {
             ControlView(model: model)
         }
         .defaultSize(width: 1020, height: 720)

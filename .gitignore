@@ -7,5 +7,5 @@ xcuserdata/
 *.xcuserstate
 *.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcodeproj/xcuserdata/
-Packages/Core/.build/
+Packages/GlanceCore/.build/
 *.moved-aside

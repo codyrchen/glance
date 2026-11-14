@@ -1,5 +1,5 @@
 import XCTest
-@testable import ContextAssistantCore
+@testable import GlanceCore
 
 final class SSEParserTests: XCTestCase {
     func testSplitsDataEventsAndIgnoresComments() {

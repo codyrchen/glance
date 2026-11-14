@@ -1,5 +1,5 @@
 import AppKit
-import ContextAssistantCore
+import GlanceCore
 import CoreGraphics
 import CoreImage
 import CoreMedia

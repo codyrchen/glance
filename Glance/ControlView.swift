@@ -1,4 +1,4 @@
-import ContextAssistantCore
+import GlanceCore
 import SwiftUI
 
 struct ControlView: View {
@@ -27,7 +27,7 @@ struct ControlView: View {
     private var windowColumn: some View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Context Assistant")
+                Text("Glance")
                     .font(.title2.weight(.semibold))
                 Text("Help for one window you choose. The shortcut captures that window only.")
                     .font(.callout)
@@ -207,7 +207,7 @@ struct ControlView: View {
                         model.beginHotkeyRecording()
                     }
                 }
-                Text("Use at least one modifier. Escape cancels recording. The shortcut works while Context Assistant is running.")
+                Text("Use at least one modifier. Escape cancels recording. The shortcut works while Glance is running.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let hotKeyError = model.hotKeyError {

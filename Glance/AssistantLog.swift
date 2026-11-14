@@ -2,7 +2,7 @@ import Foundation
 import os
 
 enum AssistantLog {
-    static let subsystem = "dev.codychen.ContextAssistant"
+    static let subsystem = "dev.codychen.Glance"
     static let capture = Logger(subsystem: subsystem, category: "capture")
     static let llm = Logger(subsystem: subsystem, category: "llm")
     static let hotkey = Logger(subsystem: subsystem, category: "hotkey")

@@ -1,8 +1,8 @@
 # Capture on macOS: what is documented, and what to measure
 
-This note is for Cody Chen, building Context Assistant, Capture Lab, and Capture Diagnostics. It describes public APIs. It is not a procedure for reading a protected window, hiding a window from a proctor, or avoiding a Screen Recording prompt.
+This note is for Cody Chen, building Glance, Capture Lab, and Capture Diagnostics. It describes public APIs. It is not a procedure for reading a protected window, hiding a window from a proctor, or avoiding a Screen Recording prompt.
 
-Context Assistant captures one window the user selects, with Screen Recording permission, through ScreenCaptureKit. If that capture is blank or fails, the assistant stops. Capture Lab changes `NSWindow` properties on its own windows only. Capture Diagnostics calls each public capture API once and writes JSON. It does not display the pixels and it does not treat one API's frame as a substitute for another.
+Glance captures one window the user selects, with Screen Recording permission, through ScreenCaptureKit. If that capture is blank or fails, the assistant stops. Capture Lab changes `NSWindow` properties on its own windows only. Capture Diagnostics calls each public capture API once and writes JSON. It does not display the pixels and it does not treat one API's frame as a substitute for another.
 
 ## Windows `SetWindowDisplayAffinity` and `NSWindow.sharingType`
 
@@ -24,7 +24,7 @@ The macOS property developers reach for, for their own window, is `NSWindow.shar
 
 Apple's AppKit reference describes `sharingType` as the level of access other processes have to the window's content. The older CoreGraphics window list header said that an on-screen window with sharing type `kCGWindowSharingNone` is not included in the image produced by `CGWindowListCreateImage`.
 
-That is the documented analogy: both APIs are a request by the window's owner, about that window. They are not a capture API, and they are not a promise that every capture path on every OS version implements the request the same way. Context Assistant never sets `.none`. Its overlay sets `.readOnly` and the opacity slider cannot go below 55%.
+That is the documented analogy: both APIs are a request by the window's owner, about that window. They are not a capture API, and they are not a promise that every capture path on every OS version implements the request the same way. Glance never sets `.none`. Its overlay sets `.readOnly` and the opacity slider cannot go below 55%.
 
 ScreenCaptureKit's own sample excludes the capturing app from a display capture by leaving that app out of the `SCContentFilter`. That filter decides what the capturing app asks for. It does not hide the app from some other process's capture.
 
@@ -35,7 +35,7 @@ ScreenCaptureKit (macOS 12.3 and later) is the supported way to capture displays
 The pieces this repo uses:
 
 - `SCShareableContent` lists windows, apps, and displays the user is allowed to know about. Listing is already a privileged call. It requires Screen Recording permission and shows the system prompt if the app has not been decided.
-- `SCContentSharingPicker` (macOS 14) is the system UI for choosing what to share. Context Assistant presents it in single-window mode and keeps the `SCContentFilter` the user confirms. Cancelling the picker captures nothing.
+- `SCContentSharingPicker` (macOS 14) is the system UI for choosing what to share. Glance presents it in single-window mode and keeps the `SCContentFilter` the user confirms. Cancelling the picker captures nothing.
 - `SCContentFilter(desktopIndependentWindow:)` limits a capture to one `SCWindow`.
 - `SCScreenshotManager.captureImage` (macOS 14) takes one still frame. This is the only capture call in the assistant pipeline.
 - `SCScreenshotManager.captureSampleBuffer` and `SCStream` are used by Capture Diagnostics as separate probes. The assistant does not call them.
@@ -68,12 +68,12 @@ Useful public checks:
 Reset the grant for one bundle id with:
 
 ```bash
-tccutil reset ScreenCapture dev.codychen.ContextAssistant
+tccutil reset ScreenCapture dev.codychen.Glance
 ```
 
 Quit the app first. After a grant, some macOS versions only notice it the next time the process starts. If "Check again" stays off, quit and reopen.
 
-macOS 15 (Sequoia) changed how often this consent is confirmed. During the 15.0 betas Apple described weekly prompts, then adjusted the shipping behavior; reports from that release describe a periodic re-prompt (widely described as monthly) and, for a while, a prompt associated with reboot. The exact cadence is OS behavior and can change in a point release. Context Assistant does not suppress it, and it does not request a restricted entitlement to skip it. When the prompt appears, the capture stops until the user allows it again.
+macOS 15 (Sequoia) changed how often this consent is confirmed. During the 15.0 betas Apple described weekly prompts, then adjusted the shipping behavior; reports from that release describe a periodic re-prompt (widely described as monthly) and, for a while, a prompt associated with reboot. The exact cadence is OS behavior and can change in a point release. Glance does not suppress it, and it does not request a restricted entitlement to skip it. When the prompt appears, the capture stops until the user allows it again.
 
 Using `SCShareableContent` directly, instead of only `SCContentSharingPicker`, is a documented API. On recent systems it is also the path that can produce the extra "access your screen" confirmation because the app is choosing the window from the list the user already picked inside the app. The system picker is the other path this app offers. Both require the same Screen Recording grant. Neither is a bypass.
 
@@ -83,7 +83,7 @@ Each target is sandboxed through its entitlements file:
 
 | Target | Sandbox | Extra entitlement |
 | --- | --- | --- |
-| Context Assistant | on | `com.apple.security.network.client`, so the model request can leave the machine |
+| Glance | on | `com.apple.security.network.client`, so the model request can leave the machine |
 | Capture Lab | on | none |
 | Capture Diagnostics | on | `com.apple.security.files.user-selected.read-write`, so Save can write the JSON the user picks |
 
@@ -95,7 +95,7 @@ For day-to-day work, Xcode Automatic signing with your Apple ID is enough. The T
 
 Distribution outside your Mac needs Developer ID signing and notarization (`notarytool`, then stapling). This repo does not include a notarization script. Sandbox, Hardened Runtime, and a real signature are the inputs notarization expects. Notarization does not grant Screen Recording. The user still approves that on their Mac.
 
-The API key is a keychain item (`kSecClassGenericPassword`, service `dev.codychen.ContextAssistant`, account `llm-api-key`, accessible when the device is unlocked). It is not in `UserDefaults`, Info.plist, or source. The sandbox uses the app's keychain. Console logs do not record the key or the OCR text.
+The API key is a keychain item (`kSecClassGenericPassword`, service `dev.codychen.Glance`, account `llm-api-key`, accessible when the device is unlocked). It is not in `UserDefaults`, Info.plist, or source. The sandbox uses the app's keychain. Console logs do not record the key or the OCR text.
 
 ## `sharingType = .none` and ScreenCaptureKit
 
@@ -118,7 +118,7 @@ What to measure, on your Mac, with your OS version in the JSON:
 3. Read `hasVisibleContent`, `success`, `error`, and `tccFailure` for `SCScreenshotManager.captureImage`, `SCScreenshotManager.captureSampleBuffer`, `SCStream`, and `CGWindowListCreateImage`.
 4. Repeat for the other sample. Record `osVersion` with the result. A difference between macOS 14, 15, and 26 is a version-dependent observation. This repository does not publish a matrix and does not tell the assistant to switch APIs when a frame is blank.
 
-Context Assistant's rule is the same on every version: one selected window, one ScreenCaptureKit still image, stop when the frame is near-black or the call fails.
+Glance's rule is the same on every version: one selected window, one ScreenCaptureKit still image, stop when the frame is near-black or the call fails.
 
 ## Blank frames
 

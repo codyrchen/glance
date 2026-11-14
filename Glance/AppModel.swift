@@ -1,5 +1,5 @@
 import AppKit
-import ContextAssistantCore
+import GlanceCore
 import Foundation
 import ScreenCaptureKit
 
@@ -565,15 +565,15 @@ final class AppModel: ObservableObject {
 }
 
 private enum Keys {
-    static let question = "assistant.question"
-    static let compact = "assistant.compact"
-    static let opacity = "assistant.opacity"
-    static let baseURL = "assistant.baseURL"
-    static let model = "assistant.model"
-    static let systemPrompt = "assistant.systemPrompt"
-    static let preset = "assistant.preset"
-    static let rateCapacity = "assistant.rateCapacity"
-    static let rateRefill = "assistant.rateRefill"
-    static let hotKeyCode = "assistant.hotKeyCode"
-    static let hotKeyModifiers = "assistant.hotKeyModifiers"
+    static let question = "glance.question"
+    static let compact = "glance.compact"
+    static let opacity = "glance.opacity"
+    static let baseURL = "glance.baseURL"
+    static let model = "glance.model"
+    static let systemPrompt = "glance.systemPrompt"
+    static let preset = "glance.preset"
+    static let rateCapacity = "glance.rateCapacity"
+    static let rateRefill = "glance.rateRefill"
+    static let hotKeyCode = "glance.hotKeyCode"
+    static let hotKeyModifiers = "glance.hotKeyModifiers"
 }

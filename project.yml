@@ -1,4 +1,4 @@
-name: ContextAssistantSuite
+name: GlanceSuite
 options:
   bundleIdPrefix: dev.codychen
   deploymentTarget:
@@ -25,29 +25,29 @@ settings:
       ENABLE_TESTABILITY: NO
       SWIFT_COMPILATION_MODE: wholemodule
 packages:
-  ContextAssistantCore:
-    path: Packages/Core
+  GlanceCore:
+    path: Packages/GlanceCore
 targets:
-  ContextAssistant:
+  Glance:
     type: application
     platform: macOS
     sources:
-      - path: ContextAssistant
+      - path: Glance
         excludes:
           - Info.plist
           - "*.entitlements"
       - path: Shared/MacCapture
     dependencies:
-      - package: ContextAssistantCore
-        product: ContextAssistantCore
+      - package: GlanceCore
+        product: GlanceCore
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.ContextAssistant
-        PRODUCT_NAME: ContextAssistant
-        PRODUCT_MODULE_NAME: ContextAssistant
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.Glance
+        PRODUCT_NAME: Glance
+        PRODUCT_MODULE_NAME: Glance
         GENERATE_INFOPLIST_FILE: NO
-        INFOPLIST_FILE: ContextAssistant/Info.plist
-        CODE_SIGN_ENTITLEMENTS: ContextAssistant/ContextAssistant.entitlements
+        INFOPLIST_FILE: Glance/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Glance/Glance.entitlements
   CaptureLab:
     type: application
     platform: macOS
@@ -74,8 +74,8 @@ targets:
           - "*.entitlements"
       - path: Shared/MacCapture
     dependencies:
-      - package: ContextAssistantCore
-        product: ContextAssistantCore
+      - package: GlanceCore
+        product: GlanceCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CaptureDiagnostics
@@ -84,48 +84,48 @@ targets:
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: CaptureDiagnostics/Info.plist
         CODE_SIGN_ENTITLEMENTS: CaptureDiagnostics/CaptureDiagnostics.entitlements
-  CoreTests:
+  GlanceCoreTests:
     type: bundle.unit-test
     platform: macOS
     sources:
-      - path: Packages/Core/Tests/ContextAssistantCoreTests
+      - path: Packages/GlanceCore/Tests/GlanceCoreTests
     dependencies:
-      - package: ContextAssistantCore
-        product: ContextAssistantCore
+      - package: GlanceCore
+        product: GlanceCore
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CoreTests
-        PRODUCT_NAME: CoreTests
+        PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.GlanceCoreTests
+        PRODUCT_NAME: GlanceCoreTests
   CaptureIntegrationTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: IntegrationTests
     dependencies:
-      - target: ContextAssistant
-      - package: ContextAssistantCore
-        product: ContextAssistantCore
+      - target: Glance
+      - package: GlanceCore
+        product: GlanceCore
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: dev.codychen.CaptureIntegrationTests
         PRODUCT_NAME: CaptureIntegrationTests
-        TEST_HOST: $(BUILT_PRODUCTS_DIR)/ContextAssistant.app/Contents/MacOS/ContextAssistant
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Glance.app/Contents/MacOS/Glance
         BUNDLE_LOADER: $(TEST_HOST)
 schemes:
-  ContextAssistant:
+  Glance:
     build:
       targets:
-        ContextAssistant: all
+        Glance: all
         CaptureIntegrationTests: [test]
-        CoreTests: [test]
+        GlanceCoreTests: [test]
     run:
       config: Debug
     test:
       config: Debug
       targets:
-        - CoreTests
+        - GlanceCoreTests
         - CaptureIntegrationTests
   CaptureLab:
     build:

@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 enum KeychainStore {
-    static let service = "dev.codychen.ContextAssistant"
+    static let service = "dev.codychen.Glance"
     static let account = "llm-api-key"
 
     static func save(_ secret: String) throws {

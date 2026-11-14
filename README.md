@@ -1,4 +1,4 @@
-# Context Assistant
+# Glance
 
 A macOS 14+ study tool. You pick one window. A global shortcut captures that window with ScreenCaptureKit, reads the text with Vision, and streams an answer into a floating panel. The panel stays visible to screenshots and screen sharing.
 
@@ -8,7 +8,7 @@ Owner: Cody Chen.
 
 ## What was verified here
 
-`Packages/Core` was built and tested on Linux with Swift 6.2.4 (`swift test` in that directory). **44 tests passed, 0 failed.** They cover hashing, similarity, the blank-frame heuristic, capture sizing, the token bucket, the response cache, the SSE parser, prompt building, history trimming, capture policy, the diagnostics JSON shape, and the chat client through a `URLProtocol` mock.
+`Packages/GlanceCore` was built and tested on Linux with Swift 6.2.4 (`swift test` in that directory). **44 tests passed, 0 failed.** They cover hashing, similarity, the blank-frame heuristic, capture sizing, the token bucket, the response cache, the SSE parser, prompt building, history trimming, capture policy, the diagnostics JSON shape, and the chat client through a `URLProtocol` mock.
 
 On macOS the client streams with `URLSession.bytes(for:)`. swift-corelibs-foundation 6.2 does not implement `bytes(for:)`, so the Linux build reads `URLSession.data(for:)` and splits lines. The parser and the request body are the same on both.
 
@@ -29,24 +29,24 @@ From the repo root:
 
 ```bash
 xcodegen generate
-open ContextAssistantSuite.xcodeproj
+open GlanceSuite.xcodeproj
 ```
 
-In Xcode, select your team on each app target (Signing & Capabilities). The entitlements files already enable the App Sandbox and Hardened Runtime. Context Assistant also has outgoing network. Capture Diagnostics can save a file you pick. Do not turn Hardened Runtime off and do not add an entitlement that disables library validation.
+In Xcode, select your team on each app target (Signing & Capabilities). The entitlements files already enable the App Sandbox and Hardened Runtime. Glance also has outgoing network. Capture Diagnostics can save a file you pick. Do not turn Hardened Runtime off and do not add an entitlement that disables library validation.
 
 Run one scheme at a time:
 
 | Scheme | What it is |
 | --- | --- |
-| Context Assistant | The assistant. Bundle id `dev.codychen.ContextAssistant` |
+| Glance | The assistant. Bundle id `dev.codychen.Glance` |
 | Capture Lab | Your own test windows. Bundle id `dev.codychen.CaptureLab` |
 | Capture Diagnostics | JSON probes. Bundle id `dev.codychen.CaptureDiagnostics` |
 
-The first build resolves the local package `Packages/Core`.
+The first build resolves the local package `Packages/GlanceCore`.
 
 ## Grant Screen Recording
 
-Context Assistant and Capture Diagnostics need Screen Recording. Capture Lab does not capture anything.
+Glance and Capture Diagnostics need Screen Recording. Capture Lab does not capture anything.
 
 1. Launch the app.
 2. Click **Request access**, or **Open Settings** and enable the app under Privacy & Security → Screen Recording.
@@ -60,7 +60,7 @@ The prompt text comes from `NSScreenCaptureUsageDescription` in each app's Info.
 Reset a bad grant:
 
 ```bash
-tccutil reset ScreenCapture dev.codychen.ContextAssistant
+tccutil reset ScreenCapture dev.codychen.Glance
 tccutil reset ScreenCapture dev.codychen.CaptureDiagnostics
 ```
 
@@ -68,7 +68,7 @@ tccutil reset ScreenCapture dev.codychen.CaptureDiagnostics
 
 The key is stored in the login keychain by the Security framework. It is not written to UserDefaults, the plist, or the repo.
 
-1. Open Context Assistant.
+1. Open Glance.
 2. Paste the key into the secure field.
 3. Click **Save to Keychain**. The field is cleared. The window then says a key is stored.
 4. Set **Base URL** to the API root, for example `https://api.openai.com/v1` or `http://127.0.0.1:11434/v1`.
@@ -88,7 +88,7 @@ While a capture is in progress the dot in the panel is orange and the menu bar i
 
 **Again** skips the cache and the "text did not change" check. Command-[ and Command-] move through saved answers. The opacity slider stops at 55%. Position presets move the panel; you can still drag it.
 
-Conversation history is a trimmed JSON file in Application Support (`ContextAssistant/history.json` inside the sandbox container). The model sees a bounded excerpt, not the image.
+Conversation history is a trimmed JSON file in Application Support (`Glance/history.json` inside the sandbox container). The model sees a bounded excerpt, not the image.
 
 ## Capture Lab and Capture Diagnostics
 
@@ -105,11 +105,11 @@ The report does not include pixels. Copy or Save writes that JSON only.
 Package tests (hashing, similarity, blank-frame inputs, token bucket, cache, SSE parser, prompts, history trimming, the streaming client through `URLProtocol`):
 
 ```bash
-cd Packages/Core
+cd Packages/GlanceCore
 swift test
 ```
 
-In Xcode, the Context Assistant scheme also runs `CoreTests` and `CaptureIntegrationTests`. The integration tests build as part of Context Assistant so the Screen Recording grant matches that app. The pixel tests always run. The tests that call ScreenCaptureKit skip when `CGPreflightScreenCaptureAccess()` is false. To capture one window from the test:
+In Xcode, the Glance scheme also runs `GlanceCoreTests` and `CaptureIntegrationTests`. The integration tests build as part of Glance so the Screen Recording grant matches that app. The pixel tests always run. The tests that call ScreenCaptureKit skip when `CGPreflightScreenCaptureAccess()` is false. To capture one window from the test:
 
 ```bash
 CONTEXT_ASSISTANT_TEST_WINDOW_ID=1234
@@ -122,7 +122,7 @@ Set that in the scheme's environment. The test records the outcome, including a 
 Stream this app's logs:
 
 ```bash
-log stream --predicate 'subsystem == "dev.codychen.ContextAssistant"' --level debug
+log stream --predicate 'subsystem == "dev.codychen.Glance"' --level debug
 ```
 
 Categories are `capture`, `llm`, `hotkey`, and `store`. Logs contain status text and error descriptions, not the API key and not the recognized text.
@@ -138,7 +138,7 @@ A blank frame is reported in the panel and the pipeline stops. That includes a p
 - macOS apps in this repo were reviewed against Apple's public ScreenCaptureKit, Vision, AppKit, and Carbon APIs. They still have to be compiled in Xcode on a Mac. A newer SDK can rename a ScreenCaptureKit Swift overlay or drop the `CGWindowListCreateImage` declaration; diagnostics already resolve that symbol at runtime and record it when it is absent.
 - `sharingType = .none` does not have one behavior across macOS 14, 15, and later. Measure it. Do not treat a single OS version as the rule. See RESEARCH.md.
 - Vision OCR depends on contrast and font size. A blank capture and a capture with no readable text are different errors.
-- The global shortcut works only while Context Assistant is running. Carbon hotkeys need at least one modifier.
+- The global shortcut works only while Glance is running. Carbon hotkeys need at least one modifier.
 - The answer panel is visible to screen sharing on purpose.
 - History and the response cache are local and size-capped. They are not encrypted beyond what the disk and keychain already provide. The key is the only secret, and it stays in the keychain.
 - The apps are not notarized. Signing with your development team is enough to run them from Xcode.

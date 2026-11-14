@@ -1,7 +1,7 @@
-import ContextAssistantCore
+import GlanceCore
 import CoreGraphics
 import XCTest
-@testable import ContextAssistant
+@testable import Glance
 
 final class PixelPipelineTests: XCTestCase {
     func testBlackImageIsReportedBlank() throws {
@@ -74,7 +74,7 @@ final class ScreenRecordingIntegrationTests: XCTestCase {
     func testWindowListWhenPermissionIsGranted() async throws {
         try XCTSkipUnless(
             PermissionCenter.isGranted,
-            "Screen Recording permission is not granted to Context Assistant. Grant it in System Settings, then rerun this test."
+            "Screen Recording permission is not granted to Glance. Grant it in System Settings, then rerun this test."
         )
         _ = try await WindowCatalog.windows()
     }
@@ -82,7 +82,7 @@ final class ScreenRecordingIntegrationTests: XCTestCase {
     func testExplicitWindowWhenConfigured() async throws {
         try XCTSkipUnless(
             PermissionCenter.isGranted,
-            "Screen Recording permission is not granted to Context Assistant."
+            "Screen Recording permission is not granted to Glance."
         )
         guard let raw = ProcessInfo.processInfo.environment["CONTEXT_ASSISTANT_TEST_WINDOW_ID"],
               let windowID = UInt32(raw) else {

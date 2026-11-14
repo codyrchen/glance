@@ -3,17 +3,37 @@ import Foundation
 import FoundationNetworking
 #endif
 import XCTest
-@testable import ContextAssistantCore
+@testable import GlanceCore
 
 final class MockLLMURLProtocol: URLProtocol {
-    static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))?
+    private static let lock = NSLock()
+    private static var handlers: [String: (URLRequest) throws -> (HTTPURLResponse, Data)] = [:]
+
+    static func setHandler(
+        for host: String,
+        _ handler: @escaping (URLRequest) throws -> (HTTPURLResponse, Data)
+    ) {
+        lock.lock()
+        handlers[host] = handler
+        lock.unlock()
+    }
+
+    static func removeHandler(for host: String) {
+        lock.lock()
+        handlers[host] = nil
+        lock.unlock()
+    }
 
     override class func canInit(with request: URLRequest) -> Bool { true }
 
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
     override func startLoading() {
-        guard let handler = Self.requestHandler else {
+        let host = request.url?.host ?? ""
+        Self.lock.lock()
+        let handler = Self.handlers[host]
+        Self.lock.unlock()
+        guard let handler else {
             client?.urlProtocol(self, didFailWithError: URLError(.badServerResponse))
             return
         }
@@ -33,10 +53,6 @@ final class MockLLMURLProtocol: URLProtocol {
 }
 
 final class LLMClientTests: XCTestCase {
-    override func tearDown() {
-        MockLLMURLProtocol.requestHandler = nil
-        super.tearDown()
-    }
 
     func testChatCompletionsURL() {
         let root = LLMConfiguration(
@@ -56,7 +72,7 @@ final class LLMClientTests: XCTestCase {
 
     func testStreamsDeltasThroughURLProtocol() async throws {
         let session = makeSession()
-        MockLLMURLProtocol.requestHandler = { request in
+        MockLLMURLProtocol.setHandler(for: "example.test") { request in
             XCTAssertEqual(request.httpMethod, "POST")
             XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer test-key")
             let body = try Self.bodyData(from: request)
@@ -90,16 +106,17 @@ final class LLMClientTests: XCTestCase {
             collected += chunk
         }
         XCTAssertEqual(collected, "Hello world")
+        MockLLMURLProtocol.removeHandler(for: "example.test")
     }
 
     func testHTTPErrorSurfacesStatus() async throws {
         let session = makeSession()
-        MockLLMURLProtocol.requestHandler = { request in
+        MockLLMURLProtocol.setHandler(for: "denied.test") { request in
             let response = HTTPURLResponse(url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!
             return (response, Data(#"{"error":{"message":"bad key"}}"#.utf8))
         }
         let client = LLMClient(session: session)
-        let config = LLMConfiguration(baseURL: URL(string: "https://example.test/v1")!, model: "m", apiKey: "nope")
+        let config = LLMConfiguration(baseURL: URL(string: "https://denied.test/v1")!, model: "m", apiKey: "nope")
         do {
             for try await _ in client.stream(configuration: config, messages: []) {
                 XCTFail("did not expect tokens")
@@ -112,11 +129,12 @@ final class LLMClientTests: XCTestCase {
             XCTAssertEqual(status, 401)
             XCTAssertTrue(body.contains("bad key"))
         }
+        MockLLMURLProtocol.removeHandler(for: "denied.test")
     }
 
     func testEmptyAPIKeyOmitsAuthorization() async throws {
         let session = makeSession()
-        MockLLMURLProtocol.requestHandler = { request in
+        MockLLMURLProtocol.setHandler(for: "127.0.0.1") { request in
             XCTAssertNil(request.value(forHTTPHeaderField: "Authorization"))
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             return (response, Data("data: [DONE]\n\n".utf8))
@@ -128,31 +146,33 @@ final class LLMClientTests: XCTestCase {
             count += 1
         }
         XCTAssertEqual(count, 0)
+        MockLLMURLProtocol.removeHandler(for: "127.0.0.1")
     }
 
     func testStreamCapsCharacters() async throws {
         let session = makeSession()
-        MockLLMURLProtocol.requestHandler = { request in
+        MockLLMURLProtocol.setHandler(for: "cap.test") { request in
             let payload = "data: {\"choices\":[{\"delta\":{\"content\":\"Hello world\"}}]}\n\ndata: [DONE]\n\n"
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             return (response, Data(payload.utf8))
         }
         let client = LLMClient(session: session, maxStreamCharacters: 5)
-        let config = LLMConfiguration(baseURL: URL(string: "https://example.test/v1")!, model: "m", apiKey: "k")
+        let config = LLMConfiguration(baseURL: URL(string: "https://cap.test/v1")!, model: "m", apiKey: "k")
         var collected = ""
         for try await chunk in client.stream(configuration: config, messages: []) {
             collected += chunk
         }
         XCTAssertEqual(collected, "Hello…")
+        MockLLMURLProtocol.removeHandler(for: "cap.test")
     }
 
     func testCancellationFinishesQuietly() async throws {
         let session = makeSession()
-        MockLLMURLProtocol.requestHandler = { request in
+        MockLLMURLProtocol.setHandler(for: "cancel.test") { request in
             throw URLError(.cancelled)
         }
         let client = LLMClient(session: session)
-        let config = LLMConfiguration(baseURL: URL(string: "https://example.test/v1")!, model: "m", apiKey: "k")
+        let config = LLMConfiguration(baseURL: URL(string: "https://cancel.test/v1")!, model: "m", apiKey: "k")
         let task = Task {
             var count = 0
             for try await _ in client.stream(configuration: config, messages: []) {
@@ -163,6 +183,7 @@ final class LLMClientTests: XCTestCase {
         task.cancel()
         let count = try await task.value
         XCTAssertEqual(count, 0)
+        MockLLMURLProtocol.removeHandler(for: "cancel.test")
     }
 
     private func makeSession() -> URLSession {
